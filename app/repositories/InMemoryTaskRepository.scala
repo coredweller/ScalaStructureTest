@@ -22,6 +22,6 @@ final class InMemoryTaskRepository(store: Ref[IO, Map[TaskId, Task]])
     }
 
 object InMemoryTaskRepository:
-  /** Returns an IO that builds a fresh in-memory repository. */
   def make(): IO[InMemoryTaskRepository] =
-    Ref[IO].of(Map.empty[TaskId, Task]).map(new InMemoryTaskRepository(_))
+    Ref.of[IO, Map[TaskId, Task]](Map.empty)
+      .map(new InMemoryTaskRepository(_))

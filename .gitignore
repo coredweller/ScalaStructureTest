@@ -1,5 +1,32 @@
+# Scala / sbt
 *.class
 *.log
+*.jar
+*.war
+*.ear
+target/
+project/target/
+project/project/
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+# sbt
+.sbt/
+.ivy2/
+.cache/
+
+# IDE
+.idea/
+.bsp/
+.metals/
+.bloop/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Dist
+dist/

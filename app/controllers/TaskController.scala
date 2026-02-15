@@ -1,28 +1,26 @@
 package controllers
 
 import cats.effect.IO
-import cats.effect.unsafe.implicits.global   // provides given IORuntime
+import cats.effect.unsafe.IORuntime
 import domain.{Task, TaskId, TaskError}
 import play.api.libs.json.*
 import play.api.mvc.*
 import services.TaskService
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 final class TaskController(
   service: TaskService,
   cc:      ControllerComponents
-)(using ec: ExecutionContext)
+)(using runtime: IORuntime)
     extends AbstractController(cc):
 
-  // ── Helper: IO[Either[TaskError, A]] → Future[Result] ────────────────────
-  private def toResult[A: Writes](io: IO[Either[TaskError, A]])(status: A => Result): Future[Result] =
+  // ── Helper: IO[Either[TaskError, A]] → Future[Result] ─────
+  private def toResult[A](io: IO[Either[TaskError, A]])(f: A => Result): Future[Result] =
     io.map {
-      case Right(value)                          => status(value)
-      case Left(TaskError.NotFound(id))          =>
-        NotFound(Json.obj("error" -> s"Task $id not found"))
-      case Left(TaskError.ValidationError(msg))  =>
-        BadRequest(Json.obj("error" -> msg))
+      case Right(value)                          => f(value)
+      case Left(TaskError.NotFound(id))          => NotFound(Json.obj("error" -> s"Task $id not found"))
+      case Left(TaskError.ValidationError(msg))  => BadRequest(Json.obj("error" -> msg))
     }.unsafeToFuture()
 
   def list: Action[AnyContent] = Action.async {
@@ -39,13 +37,13 @@ final class TaskController(
 
   def create: Action[JsValue] = Action.async(parse.json) { request =>
     request.body.validate[CreateTaskRequest] match
-      case JsError(errors)     =>
+      case JsError(errors) =>
         Future.successful(BadRequest(Json.obj("error" -> JsError.toJson(errors))))
-      case JsSuccess(req, _)   =>
+      case JsSuccess(req, _) =>
         toResult(service.create(req.title))(task => Created(Json.toJson(task)))
   }
 
-// ── Request DTO ───────────────────────────────────────────────────────────────
+// ── Request DTO ───────────────────────────────────────────────
 case class CreateTaskRequest(title: String)
 object CreateTaskRequest:
   given Reads[CreateTaskRequest] = Json.reads[CreateTaskRequest]

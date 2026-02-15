@@ -9,7 +9,6 @@ EXPOSE 9000
 ENV APP_SECRET=""
 ENV APP_HOST="0.0.0.0"
 
-ENTRYPOINT ["/app/bin/my-play-app", \
+ENTRYPOINT ["/app/bin/scala-structure-test", \
   "-Dplay.http.secret.key=${APP_SECRET}", \
-  "-Dplay.server.http.address=0.0.0.0", \
-  "-Dplay.server.http.port=9000"]
+  "-Dplay.server.http.address=0.0.0.0"]

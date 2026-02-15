@@ -4,17 +4,17 @@ import java.time.Instant
 import java.util.UUID
 import play.api.libs.json.*
 
-// ── Opaque type — wraps UUID with domain identity, zero boxing cost ───────────
+// ── Opaque type for domain identity ───────────────────────────
 opaque type TaskId = UUID
 
 object TaskId:
-  def apply(uuid: UUID): TaskId = uuid
-  def generate(): TaskId        = UUID.randomUUID()
-
+  def apply(uuid: UUID): TaskId      = uuid
+  def generate(): TaskId             = UUID.randomUUID()
   def fromString(s: String): Either[String, TaskId] =
     try Right(UUID.fromString(s))
-    catch case _: IllegalArgumentException => Left(s"Invalid TaskId: '$s'")
+    catch case _: IllegalArgumentException => Left(s"Invalid TaskId: $s")
 
+  // Scala 3 given — NOT implicit def
   given Format[TaskId] = Format(
     Reads(_.validate[String].flatMap { s =>
       fromString(s).fold(
@@ -25,7 +25,7 @@ object TaskId:
     Writes(id => JsString(id.toString))
   )
 
-// ── Aggregate ─────────────────────────────────────────────────────────────────
+// ── Aggregate ─────────────────────────────────────────────────
 case class Task(
   id:        TaskId,
   title:     String,
@@ -33,8 +33,4 @@ case class Task(
 )
 
 object Task:
-  given Format[Instant] = Format(
-    Reads(_.validate[String].map(Instant.parse)),
-    Writes(i => JsString(i.toString))
-  )
   given OFormat[Task] = Json.format[Task]
